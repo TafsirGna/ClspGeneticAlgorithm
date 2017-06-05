@@ -131,9 +131,10 @@ def getDemandPeriods(demand):
 	i=0
 	result = []
 	size_demand = len(demand)
-	while i< size_demand:
-		if int(demand[i]) == 1:
-			result.append(i)
+	while i < size_demand:
+		if int(demand[i]) != 0:
+			binome = [i, int(demand[i])]
+			result.append(copy.deepcopy(binome))
 		i+=1 
 	return result
 
@@ -253,7 +254,7 @@ def formatOneReading(filename):
 		#print(str(nbItems) + ", " + str(nbTimes) + ", " + str(demandsGrid) + ", " + str(holdingGrid) + ", " + str(chanOverGrid))
 
 		if nbItems != 0 and nbTimes != 0 and demandsGrid != [] and holdingGrid != [] and chanOverGrid != []:
-			return Instance(nbItems,nbTimes,demandsGrid,holdingGrid,chanOverGrid)
+			return Instance(nbItems,nbTimes,0,demandsGrid,holdingGrid,chanOverGrid)
 		return 0
 
 
@@ -262,6 +263,7 @@ def formatTwoReading(filename):
 	# Input data's initialization 
 	nbItems = 0
 	nbTimes = 0
+	nbCapacities = 0
 	demandsGrid = []
 	holdingGrid = []
 	chanOverGrid = []
@@ -277,23 +279,26 @@ def formatTwoReading(filename):
 			if i == 2:
 				nbItems = int(line)
 
-			if i >= 5 and i < (5 + nbItems):
+			if i == 3:
+				nbCapacities = int(line)
+
+			if i >= 5 and i < (5 + nbCapacities):
 				data = []
 				data = line.split(" ")
 				chanOverGrid.append(data)
 
-			if i == (5 + nbItems + 1):
+			if i == (5 + nbCapacities + 1):
 				holdingGrid = line.split(" ")
 
-			if i >= (5 + nbItems + 3) and i < (5 + nbItems*2 + 3):
+			if i >= (5 + nbCapacities + 3) and i < (5 + nbCapacities + 3 + nbItems):
 				data = []
 				data = line.split(" ")
 				demandsGrid.append(data)
 
 			i += 1
 
-		if nbItems != 0 and nbTimes != 0 and demandsGrid != [] and holdingGrid != [] and chanOverGrid != []:
-			return Instance(nbItems,nbTimes,demandsGrid,holdingGrid,chanOverGrid)
+		if nbItems != 0 and nbTimes != 0 and demandsGrid != [] and holdingGrid != [] and chanOverGrid != [] and nbCapacities != 0:
+			return Instance(nbItems,nbTimes, nbCapacities,demandsGrid,holdingGrid,chanOverGrid)
 		return 0	
 	
 #--------------------
@@ -325,9 +330,10 @@ def readFile(filename):
 class Instance:
 
 	#	Builder	
-	def __init__(self, nbItems, nbTimes, demandsGrid, holdingGrid, chanOverGrid):
+	def __init__(self, nbItems, nbTimes, nbCapacities, demandsGrid, holdingGrid, chanOverGrid):
 		self.nbItems = nbItems
 		self.nbTimes = nbTimes
+		self.nbCapacities = nbCapacities
 		self.demandsGrid = demandsGrid
 		self.holdingGrid = holdingGrid
 		self.chanOverGrid = chanOverGrid
@@ -346,6 +352,7 @@ class Instance:
 	def __repr__(self):
 		return "Number of Items is : {} \n".format(self.nbItems) + \
 		"Number of Times is : {} \n".format(self.nbTimes) + \
+		"Number of Capacities is : {} \n".format(self.nbCapacities) + \
 		"Demands for each item are : {} \n".format(self.demandsGrid) + \
 		"Holding costs for each item are : {} \n".format(self.holdingGrid) + \
 		"Changeover costs from one item to another one are : {} \n".format(self.chanOverGrid)
