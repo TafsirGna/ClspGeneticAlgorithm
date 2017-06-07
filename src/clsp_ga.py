@@ -12,7 +12,7 @@ from clsp_mesh_thread import *
 class GeneticAlgorithm:
 
 	#	Class' variables
-	NbMaxPopulation = 25
+	NbMaxPopulation = 1
 	mutationRate = 0.05
 	crossOverRate = 0.80
 	FITNESS_PADDING = 1
@@ -67,9 +67,10 @@ class GeneticAlgorithm:
 		threadQueue = []
 		threadCounter = 0
 
-		#Node.evaluate([[0,0], [1,1], [2,2], [1,2], [3,1], [0,0], [0,0], [3,2], [2,2], [3,2]])
-		#Node.evaluate([[1, 1], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]])
+		#Node.evaluate([[0, 0], [1, 1], [1, 1], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]])
+		Node.evaluate([[0,0], [1,1], [2,2], [1,2], [3,1], [0,0], [0,0], [3,2], [2,2], [3,2]])
 		
+		'''
 		while i >= 0:
 		
 			# i initialize the node from which the search of each thread will start
@@ -88,7 +89,7 @@ class GeneticAlgorithm:
 				solution[i + j * Chromosome.problem.nbTimes][0] = item
 				solution[i + j * Chromosome.problem.nbTimes][1] += 1
 				root.solution = solution
-				root.currentQuantity -= 1
+				root.currentQuantity += 1
 
 				print("root : ", root)
 				self.putInThreadQueue(root, threadQueue)
@@ -103,15 +104,16 @@ class GeneticAlgorithm:
 				threadQueue = []
 				threadCounter += 1
 
-				#if threadCounter == 1:
-				#	break
+			if threadCounter == 1:
+				break
+					
 			i -= 1
 		
 		# want to make sure the parent process will wait for the child thread before exiting
-		#for thread in self.listMainThreads:
-		#	thread.start()
-		#	thread.join()
-
+		for thread in self.listMainThreads:
+			thread.start()
+			thread.join()
+		'''
 		self.printResults()
 	
 
