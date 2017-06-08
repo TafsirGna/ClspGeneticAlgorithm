@@ -24,12 +24,12 @@ class Chromosome(object):
 
 			self._solution = list(solution)
 
-			if itemsRank == []:
-				self._get_itemsRanks()
+			#if itemsRank == []:
+			#	self._get_itemsRanks()
 
-			if self.isFeasible():
-				self._get_hashSolution()
-				self._get_fitnessValue()
+			#if self.isFeasible():
+			#	self._get_hashSolution()
+			#	self._get_fitnessValue()
 
 		if itemsRank != []:
 			self._itemsRank = list(itemsRank)
@@ -548,3 +548,263 @@ class Chromosome(object):
 	fitnessValue = property(_get_fitnessValue,_set_fitnessValue)
 	itemsRank = property(_get_itemsRanks, _set_itemsRanks)
 	hashSolution = property(_get_hashSolution, _set_hashSolution) 
+
+class Node(object):
+
+	def __init__(self):
+
+		self._solution = [] #[0] * (Chromosome.problem.nbTimes * 2)
+		self._currentItem = 0
+		self._currentPeriod = 0
+		self._currentQuantity = 0
+		self.fitnessValue = 0
+		self.remPeriods = []
+
+		self.remItems = []
+		for i in range(Chromosome.problem.nbItems):
+			self.remItems.append(i + 1)
+
+	def __repr__(self):
+		return "Chromosome : " + str(self._solution) + ", " + str(self.fitnessValue)
+		#" Current Item : " + str(self.currentItem) + " Current Period : " + str(self.currentPeriod) + " Item Counter : " + str(self.itemCounter) + " Fitness value : " + 
+
+	def isLeaf(self):
+		
+		#if self.itemCounter == Chromosome.problem.nbItems and self.currentPeriod == len(Chromosome.problem.deadlineDemandPeriods[self.currentItem-1]):
+		#	return True
+		#return False
+
+		if self.remItems == [] and self.remPeriods == [] and self._currentQuantity == Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1]:
+			return True
+		return False
+
+	def getChildren(self):
+		
+		children = []
+		#print(self.remItems, " : ",self.remPeriods)
+
+		nextItem = 0
+		nextPeriod = 0
+		nextQuantity = 0
+
+		print("log getChildren 0 : ", self._currentItem, " : ", self._currentPeriod, " : ", self._currentQuantity, " : ", self.remPeriods)#Chromosome.problem.deadlineDemandPeriods, " : ", Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1])
+		# i produce the successors of this current node
+		if self._currentQuantity != Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1]:
+
+			#print("yes")
+			nextItem = self._currentItem
+			nextPeriod = self._currentPeriod
+			nextQuantity = self._currentQuantity + 1
+
+		elif self.remPeriods != []:
+
+			nextItem = self.currentItem
+			nextPeriod = self.remPeriods[randint(0, len(self.remPeriods)-1)]
+			nextQuantity = 1 #Chromosome.problem.deadlineDemandPeriods[nextItem-1][nextPeriod-1][1]
+
+		elif self.remItems != []:
+
+			#self.remPeriods.remove(self._currentPeriod)
+
+			nextItem = self.remItems[randint(0, len(self.remItems)-1)]
+			nextPeriod = randint(1, len(Chromosome.problem.deadlineDemandPeriods[nextItem-1]))
+			nextQuantity = 1 #Chromosome.problem.deadlineDemandPeriods[nextItem-1][nextPeriod-1][1]
+
+		if nextItem != 0:
+
+			print("log getChildren : ", nextItem, " : ", nextPeriod, " : ", nextQuantity)
+			children = list(self.putNextItem(nextItem, nextPeriod, nextQuantity))
+			#print(self.queue)
+
+		return children
+
+	def buildRemPeriod(self):
+
+		self.remPeriods = []
+		for i in range(len(Chromosome.problem.deadlineDemandPeriods[self._currentItem-1])):
+			self.remPeriods.append(i + 1)
+
+	def putNextItem(self, nextItem, nextPeriod, nextQuantity):
+
+		period = Chromosome.problem.deadlineDemandPeriods[nextItem-1][nextPeriod-1][0]
+		#print("period : ", period)
+		childrenQueue = []
+
+		for it in range(Chromosome.problem.nbCapacities):
+
+			i = period + it * Chromosome.problem.nbTimes
+			while i >= 0 + it * Chromosome.problem.nbTimes:
+
+				if self.solution[i][0] == 0 or self.solution[i][0] == nextItem: 
+
+					solution = copy.deepcopy(self.solution)
+					if solution[i][0] == 0 :
+						solution[i][0] = nextItem
+						solution[i][1] = 1
+					elif solution[i][0] == nextItem:
+						solution[i][1] += 1
+
+					nextNode = copy.deepcopy(self)
+					if nextItem != self.currentItem:
+						nextNode.currentItem = nextItem
+						#nextNode.buildRemPeriod()
+						nextNode.currentPeriod = nextPeriod
+						#print("ok 1 ")
+					elif nextPeriod != self.currentPeriod:
+						nextNode.currentPeriod = nextPeriod
+						#print("ok 2 ")
+					else:
+						nextNode.currentQuantity = nextQuantity
+						#print("ok 3 ")#: ", nextNode.currentQuantity, nextQuantity)
+						#print(self._currentItem, self._currentPeriod)
+						if nextNode.currentQuantity == Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1]:
+							nextNode.remPeriods.remove(nextPeriod)
+
+					nextNode.solution = solution
+					print(" i : ", i, " node : ", nextNode, " yep : ", nextNode.currentQuantity, nextQuantity)
+
+					nbChildren = len(childrenQueue)
+
+					#print("Child Node : ", nextNode)
+
+					if (childrenQueue == []):
+
+						childrenQueue.append(copy.deepcopy(nextNode))
+						#print(threadQueue)
+				
+					elif nbChildren == 1 and (childrenQueue[0]).fitnessValue == 0:
+
+						childrenQueue.append(copy.deepcopy(nextNode))
+						#print(threadQueue)
+
+					else:
+						# i sort the list of zeroperiods from the most convenient place to the least convenient one
+						prevValue = 0
+						j = 0
+						found = False
+						while j < nbChildren:
+
+							if nextNode.fitnessValue >= prevValue and nextNode.fitnessValue <= (childrenQueue[j]).fitnessValue:
+								found = True
+								childrenQueue = childrenQueue[:j] + [copy.deepcopy(nextNode)] + childrenQueue[j:]
+								break
+
+							prevValue = (childrenQueue[j]).fitnessValue
+
+							j += 1
+
+						if found is False:
+							childrenQueue.append(copy.deepcopy(nextNode))
+
+				i -= 1
+
+		#print("childrenQueue : ", list(reversed(childrenQueue)), "---")
+		return reversed(childrenQueue)
+		#print(self.queue, "---")
+	
+
+	def _get_currentItem(self):
+		return self._currentItem
+
+	def _set_currentItem(self, new_value):
+		self._currentItem = new_value
+		self.remItems.remove(new_value)
+		self.buildRemPeriod()
+		#self._currentQuantity = 0 
+
+	def _get_currentPeriod(self):
+		return self._currentPeriod
+
+	def _set_currentPeriod(self, new_value):
+		self._currentPeriod = new_value
+		self._currentQuantity = 1
+		if self.currentQuantity == Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1]:
+			self.remPeriods.remove(new_value)
+		#else:
+		#	self._currentQuantity += 1
+
+	def _get_solution(self):
+		return self._solution
+
+	def _set_solution(self, new_value):
+		self._solution = list(new_value)
+		self.fitnessValue = Node.evaluate(self._solution) 
+
+	def _set_currentQuantity(self, new_value):
+		self._currentQuantity = new_value
+
+	def _get_currentQuantity(self):
+		return self._currentQuantity
+
+	def evaluate(cls, sol):
+			
+		solution = list(sol)
+		#print(solution)
+
+		fitnessValue = 0
+		grid = Chromosome.problem.chanOverGrid
+
+		# Calculation of all the change-over costs
+
+		for i in range(Chromosome.problem.nbCapacities):
+
+			prevItem = 0
+			for j in range(Chromosome.problem.nbTimes):
+
+				#print(" intermediary cost : ", fitnessValue)
+				item = solution[j + i * Chromosome.problem.nbTimes][0]
+				if j == 0:
+					if item != 0:
+						fitnessValue += int(grid[i][item-1])
+						#print(1)
+				else:
+					if item != 0 and prevItem != item:
+						fitnessValue += int(grid[i][item-1])
+						#print(2, int(grid[i][item-1]))
+
+				#print(" j : ", j, " item : ", item)
+				prevItem = item
+
+		#print("log evaluate : ", fitnessValue)
+				
+		#print(" intermediary cost : ", fitnessValue)
+		# Calculation of the sum of holding costs
+
+		for i in range(Chromosome.problem.nbCapacities):
+
+			itemCounter = [1] * Chromosome.problem.nbItems
+
+			for j in range(Chromosome.problem.nbTimes):
+
+				item = solution[j + i * Chromosome.problem.nbTimes][0]
+				quantity = solution[j + i * Chromosome.problem.nbTimes][0]
+				#print ("log evaluate 1 : ", item, " : ", Chromosome.problem.deadlineDemandPeriods)
+
+				if item != 0:
+
+					#print("log evaluate fitness : ", fitnessValue, " : ", int(Chromosome.problem.holdingGrid[item-1]), " : ", (Chromosome.problem.deadlineDemandPeriods[item-1][(itemCounter[item-1])-1][0] - j), " : ", quantity, " : ")
+					fitnessValue += int(Chromosome.problem.holdingGrid[item-1])	\
+					* (Chromosome.problem.deadlineDemandPeriods[item-1][(itemCounter[item-1])-1][0] - j) \
+					* quantity
+
+				it = 0
+				for itemDeadlines in Chromosome.problem.deadlineDemandPeriods:
+					for deadline in itemDeadlines:
+						if deadline[0] == j:
+							#print ("log evaluate 2 : ", item, " : ", j)
+							itemCounter[it] += 1 
+					it += 1
+
+				#print ("log evaluate 2 : ", itemCounter)
+
+		#print(fitnessValue)
+		
+		return fitnessValue
+
+	evaluate = classmethod(evaluate)
+
+	# Properties
+	currentItem = property(_get_currentItem, _set_currentItem)
+	currentPeriod = property(_get_currentPeriod, _set_currentPeriod)
+	solution = property(_get_solution, _set_solution)
+	currentQuantity = property(_get_currentQuantity, _set_currentQuantity)

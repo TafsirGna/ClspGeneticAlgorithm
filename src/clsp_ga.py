@@ -68,9 +68,9 @@ class GeneticAlgorithm:
 		threadCounter = 0
 
 		#Node.evaluate([[0, 0], [1, 1], [1, 1], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]])
-		Node.evaluate([[0,0], [1,1], [2,2], [1,2], [3,1], [0,0], [0,0], [3,2], [2,2], [3,2]])
+		#Node.evaluate([[0,0], [1,1], [2,2], [1,2], [3,1], [0,0], [0,0], [3,2], [2,2], [3,2]])
 		
-		'''
+		
 		while i >= 0:
 		
 			# i initialize the node from which the search of each thread will start
@@ -89,7 +89,6 @@ class GeneticAlgorithm:
 				solution[i + j * Chromosome.problem.nbTimes][0] = item
 				solution[i + j * Chromosome.problem.nbTimes][1] += 1
 				root.solution = solution
-				root.currentQuantity += 1
 
 				print("root : ", root)
 				self.putInThreadQueue(root, threadQueue)
@@ -113,7 +112,7 @@ class GeneticAlgorithm:
 		for thread in self.listMainThreads:
 			thread.start()
 			thread.join()
-		'''
+		
 		self.printResults()
 	
 
