@@ -12,7 +12,7 @@ from clsp_mesh_thread import *
 class GeneticAlgorithm:
 
 	#	Class' variables
-	NbMaxPopulation = 1
+	NbMaxPopulation = 4
 	mutationRate = 0.05
 	crossOverRate = 0.80
 	FITNESS_PADDING = 1
@@ -90,7 +90,7 @@ class GeneticAlgorithm:
 				solution[i + j * Chromosome.problem.nbTimes][1] += 1
 				root.solution = solution
 
-				print("root : ", root)
+				#print("root : ", root)
 				self.putInThreadQueue(root, threadQueue)
 
 

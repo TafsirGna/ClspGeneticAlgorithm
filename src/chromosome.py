@@ -23,13 +23,12 @@ class Chromosome(object):
 		if solution != []:
 
 			self._solution = list(solution)
-
 			#if itemsRank == []:
 			#	self._get_itemsRanks()
 
-			#if self.isFeasible():
-			#	self._get_hashSolution()
-			#	self._get_fitnessValue()
+			if self.isFeasible():
+				self._get_hashSolution()
+				self._get_fitnessValue()
 
 		if itemsRank != []:
 			self._itemsRank = list(itemsRank)
@@ -46,56 +45,11 @@ class Chromosome(object):
 
 			if self.hashSolution not in Chromosome.hashTable:
 				
-				grid = Chromosome.problem.chanOverGrid
-
-				# Calculation of all the change-over costs
-				
-				i = 1
-				tmp = self._solution[0]
-				while i < Chromosome.problem.nbTimes :
-
-					n = self._solution[i]
-
-					if (tmp == 0):
-						i+=1
-						tmp = n
-					else:
-						
-						if (n != 0):
-							if (n != tmp):
-								self._fitnessValue += int((grid[tmp-1])[n-1])
-								tmp = n
-						else:
-							tmp = self._solution[i-1]
-
-							j=i
-							while j < Chromosome.problem.nbTimes and self._solution[j] == 0:
-								j+=1
-							i=j-1
-						
-						i+=1
-
-				#print(" intermediary cost : ", self._fitnessValue)
-				# Calculation of the sum of holding costs
-
-				i=0
-				while i < Chromosome.problem.nbItems:
-
-					itemDemandPeriods = Chromosome.problem.deadlineDemandPeriods[i]
-
-					itemManufactPeriods = getManufactPeriods(self._solution, i+1)
-
-					j = 0
-					nbitemDemandPeriods = len(itemDemandPeriods)
-					while j < nbitemDemandPeriods:
-						self._fitnessValue += int(Chromosome.problem.holdingGrid[i])*(itemDemandPeriods[j]-itemManufactPeriods[j])
-						j+=1
-
-					i+=1
+				self._fitnessValue = Node.evaluate(self._solution)
 
 				hashTableData = []
 				hashTableData.append(self._fitnessValue)
-				hashTableData.append(self.itemsRank)
+				#hashTableData.append(self.itemsRank)
 				Chromosome.hashTable[self.hashSolution] = list(hashTableData)
 
 			else:
@@ -193,35 +147,62 @@ class Chromosome(object):
 	def isFeasible(self):
 
 		# i check first that there's not shortage or backlogging
-		i = 0
-		feasible = False
-		while i < Chromosome.problem.nbItems:
 
-			itemDemandPeriods = Chromosome.problem.deadlineDemandPeriods[i]
+		manufactGrid = copy.deepcopy(Chromosome.problem.deadlineDemandPeriods)
 
-			itemManufactPeriods = getManufactPeriods(self._solution,i+1)
+		for row in manufactGrid:
+			for cell in row:
+				cell[1] = 0
 
-			if (len(itemManufactPeriods) != len(itemDemandPeriods)):
-				return False
-			else:
-				j = 0
-				nbitemManufactPeriods = len(itemManufactPeriods)
-				while j < nbitemManufactPeriods:
+		#print(" yop ", manufactGrid)
 
-					if (itemManufactPeriods[j] > itemDemandPeriods[j]):
-						return False
+		#listCounters = [1] * Chromosome.problem.nbItems
 
-					j+=1
+		for i in range(Chromosome.problem.nbTimes):
 
-				feasible = True
+			for j in range(Chromosome.problem.nbCapacities):
 
-			i+=1
+				item = self._solution[i + j * Chromosome.problem.nbTimes][0]
+				quantity = self._solution[i + j * Chromosome.problem.nbTimes][1]
+				#print (" item : ", item)
+				if item != 0:
 
-		if (feasible is True):
-			#print("Feasible True")
-			return True
-		#print("Feasible False")
-		return False
+					# i want to get the interval of periods to which the current item belongs to
+					mini = 0
+					inc = 0
+					for cell in Chromosome.problem.deadlineDemandPeriods[item-1]:
+						if i >= mini and i <= cell[0]: 
+							break
+						mini = cell[0]
+						inc += 1
+
+					#print (" item : ", item, inc)
+					manufactGrid[item-1][inc][1] += quantity
+
+		#print(manufactGrid, " : ", self._solution)
+		#print (" hop : ", Chromosome.problem.deadlineDemandPeriods)
+
+		for i in range(Chromosome.problem.nbItems):
+
+			quantity = 0
+			#sum1 = 0
+			#sum2 = 0
+			for j in range(len(Chromosome.problem.deadlineDemandPeriods[i])):
+				expected = Chromosome.problem.deadlineDemandPeriods[i][j][1]
+				quantity += manufactGrid[i][j][1]
+
+				#sum1 += expected
+				#sum2 += manufact
+
+				#print(i+1, " : ", j+1, " : ", expected, " : ", quantity)
+				if  quantity < expected:
+					#print ("Falses returned ! ")
+					return False
+				else:
+					quantity -= expected
+					
+		#print ("True returned ! ")
+		return True
 
 	#--------------------
 	# function : mutate
@@ -587,7 +568,7 @@ class Node(object):
 		nextPeriod = 0
 		nextQuantity = 0
 
-		print("log getChildren 0 : ", self._currentItem, " : ", self._currentPeriod, " : ", self._currentQuantity, " : ", self.remPeriods)#Chromosome.problem.deadlineDemandPeriods, " : ", Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1])
+		#print("log getChildren 0 : ", self._currentItem, " : ", self._currentPeriod, " : ", self._currentQuantity, " : ", self.remPeriods)#Chromosome.problem.deadlineDemandPeriods, " : ", Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1])
 		# i produce the successors of this current node
 		if self._currentQuantity != Chromosome.problem.deadlineDemandPeriods[self._currentItem-1][self._currentPeriod-1][1]:
 
@@ -612,7 +593,7 @@ class Node(object):
 
 		if nextItem != 0:
 
-			print("log getChildren : ", nextItem, " : ", nextPeriod, " : ", nextQuantity)
+			#print("log getChildren : ", nextItem, " : ", nextPeriod, " : ", nextQuantity)
 			children = list(self.putNextItem(nextItem, nextPeriod, nextQuantity))
 			#print(self.queue)
 
@@ -661,7 +642,7 @@ class Node(object):
 							nextNode.remPeriods.remove(nextPeriod)
 
 					nextNode.solution = solution
-					print(" i : ", i, " node : ", nextNode, " yep : ", nextNode.currentQuantity, nextQuantity)
+					#print(" i : ", i, " node : ", nextNode, " yep : ", nextNode.currentQuantity, nextQuantity)
 
 					nbChildren = len(childrenQueue)
 

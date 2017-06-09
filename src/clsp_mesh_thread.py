@@ -183,6 +183,7 @@ class MeshThreadsManager(object):
 				thread.start()
 
 		(self.grid[self.meshRows-1][self.meshCols-1]).doneEvent.wait()
+		
 
 		if not self.isValidPop():
 			return
@@ -190,10 +191,9 @@ class MeshThreadsManager(object):
 		print(" log start : ", self.printPopulation())
 		self.putPopInRank()
 		#print("Yes : ", self.printRangedThreads())
-
+		
 		# TODO : make sure that the initial population is quite diverse
 
-		'''
 		# then, i send the migrants
 		self.sendMigrants()
 
@@ -232,7 +232,9 @@ class MeshThreadsManager(object):
 			(self.grid[self.meshRows-1][self.meshCols-1]).doneEvent.wait()
 
 			#print(self.printPopulation())
-				
+			if i == 3:
+				break
+
 			i += 1
 
 		if self.memory != []:
@@ -248,9 +250,10 @@ class MeshThreadsManager(object):
 		#(self.grid[self.meshRows-1][self.meshCols-1]).doneEvent.wait()
 
 		#print("Yes : ", self.printPopulation())
-		'''
+	
 	
 	def putPopInRank(self):
+		self.rangedThreadsList = []
 		for row in self.grid:
 			for thread in row:
 				self.putInRank(thread)
@@ -341,6 +344,7 @@ class MeshThread(Thread):
 
 	def mateWith(self, chromosome):
 
+		
 		solution3 = []
 		solution4 = []
 
@@ -352,13 +356,15 @@ class MeshThread(Thread):
 			chromosomes.append(self._chromosome)
 			chromosomes.append(chromosome)
 			# i retrieve a table that stores the period each item has been manufactered for
+			'''
 			ranks1 = self._chromosome.itemsRank
 			ranks2 = chromosome.itemsRank
 
 			ranks3 = []
 			ranks4 = []
+			'''
 
-			randomIndice = randint(1,Chromosome.problem.nbTimes-1)
+			randomIndice = randint(1,Chromosome.problem.nbCapacities-1)
 
 			#print(" ")
 
@@ -370,21 +376,22 @@ class MeshThread(Thread):
 			solution3 = self._chromosome.solution[:randomIndice]
 			solution4 = chromosome.solution[:randomIndice]
 
-			ranks3 = ranks1[:randomIndice]
-			ranks4 = ranks2[:randomIndice]
+			#ranks3 = ranks1[:randomIndice]
+			#ranks4 = ranks2[:randomIndice]
 
 
 			solution3 += chromosome.solution[randomIndice:]
 			solution4 += self._chromosome.solution[randomIndice:]
 
-			ranks3 += ranks2[randomIndice:]
-			ranks4 += ranks1[randomIndice:]
+			#ranks3 += ranks2[randomIndice:]
+			#ranks4 += ranks1[randomIndice:]
 
 			# Once, the two resulting chromosomes have been formed, i make each of them feasible with regards of the constraints
 
 			#print("Log mateWith 1 : ", self.chromosome, " and "," randomIndice : ", randomIndice)
 			#print("Log mateWith 2 : ", self.chromosome, " and "," 2 - solution3 : ", solution3, " ranks3 : ", ranks3, " solution4 : ", solution4, " ranks4 : ", ranks4)
 
+			'''
 			chromosome3 = Chromosome(solution3, ranks3)
 			chromosome3.getFeasible()
 			#chromosome3.advmutate()
@@ -409,7 +416,7 @@ class MeshThread(Thread):
 			#print("Log mateWith 3: ", " and ", self._chromosome, " and ", c)
 
 			self._chromosome.mutate()
-		
+			'''
 
 	def _set_chromosome(self, new_value):
 		if isinstance(new_value, list):
@@ -434,13 +441,18 @@ class MeshThread(Thread):
 
 				self._chromosome = Chromosome(list(currentNode.solution))
 				#self._chromosome.advmutate()
-				break
+				self.mainThread.meshThreadsManager.locker.acquire()
+				if self._chromosome not in self.mainThread.meshThreadsManager.rangedThreadsList:
+					self.mainThread.meshThreadsManager.rangedThreadsList.append(copy.deepcopy(self._chromosome))
+					self.mainThread.meshThreadsManager.locker.release()
+					break
+				self.mainThread.meshThreadsManager.locker.release()
 
 			else:
 
-				print ("current Node : ", currentNode)
+				#print ("current Node : ", currentNode)
 				l = currentNode.getChildren()
-				print("Children : ", l)
+				#print("Children : ", l)
 				self.queue += l
 
 			#if i == 10:
