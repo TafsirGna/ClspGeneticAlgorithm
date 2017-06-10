@@ -200,6 +200,7 @@ class MeshThreadsManager(object):
 		i = 0
 		while True:			
 
+			print(i, " -------------: ", self.printPopulation())
 			# i put all the immigrants into the population before starting a new run
 			i = len(self.rangedThreadsList) - 1
 			for chromosome in self.immigrants:
@@ -220,7 +221,7 @@ class MeshThreadsManager(object):
 				self.memory.append(copy.deepcopy((self.grid[0][0]).chromosome))
 
 				c = copy.deepcopy((self.grid[0][0]).chromosome)
-				c.advmutate()
+				#c.advmutate()
 
 				if c == (self.grid[0][0]).chromosome:
 					break
@@ -231,7 +232,6 @@ class MeshThreadsManager(object):
 
 			(self.grid[self.meshRows-1][self.meshCols-1]).doneEvent.wait()
 
-			#print(self.printPopulation())
 			if i == 3:
 				break
 
@@ -355,14 +355,6 @@ class MeshThread(Thread):
 			chromosomes = []
 			chromosomes.append(self._chromosome)
 			chromosomes.append(chromosome)
-			# i retrieve a table that stores the period each item has been manufactered for
-			'''
-			ranks1 = self._chromosome.itemsRank
-			ranks2 = chromosome.itemsRank
-
-			ranks3 = []
-			ranks4 = []
-			'''
 
 			randomIndice = randint(1,Chromosome.problem.nbCapacities-1)
 
@@ -376,29 +368,22 @@ class MeshThread(Thread):
 			solution3 = self._chromosome.solution[:randomIndice]
 			solution4 = chromosome.solution[:randomIndice]
 
-			#ranks3 = ranks1[:randomIndice]
-			#ranks4 = ranks2[:randomIndice]
-
-
 			solution3 += chromosome.solution[randomIndice:]
 			solution4 += self._chromosome.solution[randomIndice:]
-
-			#ranks3 += ranks2[randomIndice:]
-			#ranks4 += ranks1[randomIndice:]
 
 			# Once, the two resulting chromosomes have been formed, i make each of them feasible with regards of the constraints
 
 			#print("Log mateWith 1 : ", self.chromosome, " and "," randomIndice : ", randomIndice)
 			#print("Log mateWith 2 : ", self.chromosome, " and "," 2 - solution3 : ", solution3, " ranks3 : ", ranks3, " solution4 : ", solution4, " ranks4 : ", ranks4)
 
-			'''
-			chromosome3 = Chromosome(solution3, ranks3)
-			chromosome3.getFeasible()
+			#print("ok")
+			chromosome3 = Chromosome(solution3)
+			#chromosome3.getFeasible()
 			#chromosome3.advmutate()
 			chromosomes.append(chromosome3)
 
-			chromosome4 = Chromosome(solution4, ranks4)
-			chromosome4.getFeasible()
+			chromosome4 = Chromosome(solution4)
+			#chromosome4.getFeasible()
 			#chromosome4.advmutate()
 			chromosomes.append(chromosome4)
 
@@ -415,8 +400,8 @@ class MeshThread(Thread):
 			self._chromosome = copy.deepcopy(c)
 			#print("Log mateWith 3: ", " and ", self._chromosome, " and ", c)
 
-			self._chromosome.mutate()
-			'''
+			#self._chromosome.mutate()
+			
 
 	def _set_chromosome(self, new_value):
 		if isinstance(new_value, list):

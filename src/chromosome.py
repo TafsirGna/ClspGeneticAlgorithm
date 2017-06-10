@@ -14,24 +14,19 @@ class Chromosome(object):
 
 		# Variables
 		self._solution = []
-		self._itemsRank = []
 		self._fitnessValue = 0
-		self.itemsRankFlag = False
 		self._hashSolution = ""
-		self.manufactItemsPeriods = getManufactPeriodsGrid(Chromosome.problem.nbItems, Chromosome.problem.deadlineDemandPeriods) #Chromosome.problem.manufactItemsPeriods 
-
+		
 		if solution != []:
 
 			self._solution = list(solution)
-			#if itemsRank == []:
-			#	self._get_itemsRanks()
 
 			if self.isFeasible():
 				self._get_hashSolution()
 				self._get_fitnessValue()
-
-		if itemsRank != []:
-			self._itemsRank = list(itemsRank)
+			else:
+			#	print("ok")
+				self.getFeasible()
 
 	# Getters
 
@@ -49,63 +44,16 @@ class Chromosome(object):
 
 				hashTableData = []
 				hashTableData.append(self._fitnessValue)
-				#hashTableData.append(self.itemsRank)
 				Chromosome.hashTable[self.hashSolution] = list(hashTableData)
 
 			else:
 				hashTableData = Chromosome.hashTable[self.hashSolution]
 				self._fitnessValue = hashTableData[0]
 
-		#if self._fitnessValue < 375:
-		#	print(self._solution, self._fitnessValue)
-
 		return self._fitnessValue
 
 	def _get_solution(self):
 		return self._solution
-
-	def _get_itemsRanks(self):
-
-		#if self.itemsRankFlag is False:
-
-		if self.hashSolution not in Chromosome.hashTable:
-
-			if self.itemsRankFlag is False:
-
-				self._itemsRank = []
-				gridCounters = [1] * Chromosome.problem.nbItems
-				#print("grid : ", gridCounters)
-
-				i = 0 
-				while i < Chromosome.problem.nbTimes:
-
-					if self._solution[i] != 0:
-
-						item = self._solution[i]
-						counter = gridCounters[item-1]
-						self._itemsRank.append(counter)
-
-						# then, i increment the counter of this item
-						gridCounters[item-1] = (counter+1)
-
-					else:
-						self._itemsRank.append(0)
-
-					i+=1
-
-				self.itemsRankFlag = True
-
-				hashTableData = []
-				hashTableData.append(self.fitnessValue)
-				hashTableData.append(self._itemsRank)
-				Chromosome.hashTable[self.hashSolution] = list(hashTableData)
-
-		else:
-
-			hashTableData = Chromosome.hashTable[self.hashSolution]
-			self._itemsRank = hashTableData[1]
-
-		return self._itemsRank
 
 	def _get_hashSolution(self):
 
@@ -123,9 +71,6 @@ class Chromosome(object):
 
 	def _set_hashSolution(self, new_value):
 		self._hashSolution = new_value
-
-	def _set_itemsRanks(self, new_value):
-		self._itemsRank = new_value
 
 	def _set_solution(self, new_solution):
 		self._solution = new_solution
@@ -201,6 +146,8 @@ class Chromosome(object):
 				else:
 					quantity -= expected
 					
+		if quantity != 0:
+			return False
 		#print ("True returned ! ")
 		return True
 
@@ -351,144 +298,141 @@ class Chromosome(object):
 		#print(" In Chromosome 1 : ", self._solution)
 		#print(self._solution)
 
-		if self.isFeasible() is False:
 
-			#print(" grid : ", grid)
-			copy_solution = list(self._solution)
+		#print(" grid : ", grid)
+		copy_solution = list(self._solution)
 
-			# i make sure that the number of goods producted isn't superior to the number expected
-			i = 0
-			while i < Chromosome.problem.nbTimes:
+		manufactGrid = copy.deepcopy(Chromosome.problem.deadlineDemandPeriods)
 
-				if self._solution[i] != 0:
+		for row in manufactGrid:
+			for cell in row:
+				cell[1] = 0
 
-					item = self._solution[i]
-					#print(" ok : ", self._solution, self._itemsRank)
-					#print(" item picked : ", item)
-					rank = self._itemsRank[i]
-					#print(i, item-1, rank-1, self.manufactItemsPeriods)
-					value = self.manufactItemsPeriods[item-1][rank-1]
+		#print(" yop ", manufactGrid)
 
-					if value == -1:
-						itemDemandPeriods = self.manufactItemsPeriods[item-1]
-						itemDemandPeriods[rank-1] = i
-						#print(" It isn't yet in the tab")
-						#print(" == -1 ", item, i, rank)
+		#listCounters = [1] * Chromosome.problem.nbItems
+		zeroPeriodsGrid = []
+		for i in range(Chromosome.problem.nbCapacities):
+			zeroPeriodsGrid.append([])
+		#print(zeroPeriodsGrid, "roul")
 
+		for i in range(Chromosome.problem.nbTimes):
+
+			for j in range(Chromosome.problem.nbCapacities):
+
+				item = self._solution[i + j * Chromosome.problem.nbTimes][0]
+				quantity = self._solution[i + j * Chromosome.problem.nbTimes][1]
+				#print (" item : ", item)
+				if item != 0:
+
+					# i want to get the interval of periods to which the current item belongs to
+					mini = 0
+					inc = 0
+					for cell in Chromosome.problem.deadlineDemandPeriods[item-1]:
+						if i >= mini and i <= cell[0]: 
+							break
+						mini = cell[0]
+						inc += 1
+
+					#print (" item : ", item, inc)
+					manufactGrid[item-1][inc][1] += quantity
+
+				else:
+					# i fill the grid of zero periods
+					(zeroPeriodsGrid[j]).append(i)
+
+		#print(zeroPeriodsGrid, "roul")
+
+		#print(manufactGrid, " : ", self._solution)
+		#print (" hop : ", Chromosome.problem.deadlineDemandPeriods)
+
+		# i make sure that the number of goods producted isn't superior to the number expected
+
+		for i in range(Chromosome.problem.nbItems):
+
+			quantity = 0
+			rowSize = len(Chromosome.problem.deadlineDemandPeriods[i])
+			for j in range(rowSize):
+
+				expected = Chromosome.problem.deadlineDemandPeriods[i][j][1]
+				quantity += manufactGrid[i][j][1]
+
+				#print("a- ", i+1, " : ", j+1, " : ", expected, " : ", quantity)
+
+				if quantity > expected:
+
+					if j == 0:
+						lbound = 0
 					else:
+						lbound = Chromosome.problem.deadlineDemandPeriods[i][j-1][0] + 1
 
-						#print(" != -1 ", item, i, rank)
-						#print(" It is already in the tab")
-						cost1 = Chromosome.getCostof(value, item, rank, copy_solution, i)
-						cost2 = Chromosome.getCostof(i, item, rank, copy_solution, value)
+					gap = quantity - expected
+					#print ("gap : ", gap, lbound)
+					for k in range(lbound, Chromosome.problem.deadlineDemandPeriods[i][j][0]+1):
 
-						#print(" cost 1 : ", cost1, " cost2 : ", cost2)
-						if cost2 < cost1 :
-							itemDemandPeriods = self.manufactItemsPeriods[item-1]
-							itemDemandPeriods[rank-1] = i
+						for l in range(Chromosome.problem.nbCapacities):
 
-							#print(" cost2 < cost1 : ", value, item)
-							self._solution[value] = 0
+							item = self._solution[k + l * Chromosome.problem.nbTimes][0]
+							quant = self._solution[k + l * Chromosome.problem.nbTimes][1]
+							#print ("item : ", item, l, k, quant)
+							if item == (i + 1):
 
-						else:
-							self._solution[i] = 0
-				i+=1
-
-			#print(" in middle getFeasible : ", self._solution, ", ", self._itemsRank)
-			#print()
-			# i make sure that the number of items producted isn't inferior to the number expected
-			i = 0
-			while i < Chromosome.problem.nbItems:
-
-				j = 0
-				nbmanufactItemsPeriods = len(self.manufactItemsPeriods[i])
-				while j < nbmanufactItemsPeriods:
-
-					if self.manufactItemsPeriods[i][j] == -1:
-						if j == 0:
-							lbound = 0
-						else:
-							lbound = self.manufactItemsPeriods[i][j-1]
-						
-						zeroperiods = []
-						k = lbound+1
-						while k <= Chromosome.problem.deadlineDemandPeriods[i][j]:
-							if self._solution[k] == 0:
-								zeroperiods.append(k)
-							k+=1
-
-						#print("zeroperiods : ", zeroperiods)
-						nbZeroPeriods = len(zeroperiods)
-
-						if nbZeroPeriods > 0:
-
-							cost1 = Chromosome.getCostof(zeroperiods[0], i+1, j+1, copy_solution)
-							#print(" cost1 : ", cost1 )
-
-							k = 1 
-							indice = zeroperiods[0]
-							while k < nbZeroPeriods:
-								cost2 = Chromosome.getCostof(zeroperiods[k], i+1, j+1, copy_solution)
-								#print(" cost2 : ", cost2 , zeroperiods[k])
-								if cost2 < cost1:
-									#print(" cost2 < cost1 : ", cost1 , cost2 )
-									indice = zeroperiods[k]
-								k+=1
-
-							self._solution[indice] = i+1
-
-							itemDemandPeriods = self.manufactItemsPeriods[i]
-							itemDemandPeriods[j] = indice
-
-						else:
-							
-							# experimental code 
-
-							# if there's no place to put this item, then i check all the other times in order to put this item there
-							
-							lbound = 0
-							p = 1
-							for deadline in Chromosome.problem.deadlineDemandPeriods[i]:
-
-								zeroperiods = []
-								k = lbound
-								while k <= deadline:
-									if self._solution[k] == 0:
-										zeroperiods.append(k)
-									k += 1
-								lbound = deadline + 1
-
-								nbZeroPeriods = len(zeroperiods)
-								if nbZeroPeriods > 0:
-
-									cost1 = Chromosome.getCostof(zeroperiods[0], i+1, p, copy_solution)
-									#print(" cost1 : ", cost1 )
-
-									k = 1 
-									indice = zeroperiods[0]
-									while k < nbZeroPeriods:
-										cost2 = Chromosome.getCostof(zeroperiods[k], i+1, p, copy_solution)
-										#print(" cost2 : ", cost2 , zeroperiods[k])
-										if cost2 < cost1:
-											#print(" cost2 < cost1 : ", cost1 , cost2 )
-											indice = zeroperiods[k]
-										k+=1
-
-									self._solution[indice] = i+1
-
-									itemDemandPeriods = self.manufactItemsPeriods[i]
-									itemDemandPeriods[j] = indice
-
+								if gap >= quant:
+									gap -= quant
+									self._solution[k + l * Chromosome.problem.nbTimes][0] = 0
+									self._solution[k + l * Chromosome.problem.nbTimes][1] = 0
+								elif gap > 0:
+									self._solution[k + l * Chromosome.problem.nbTimes][1] -= gap
+									gap = 0
+									manufactGrid[i][j][1] = expected
+								else:
+									manufactGrid[i][j][1] = expected
 									break
-								p += 1
 
+						if gap == 0:
+							break
 
-					j+=1
-				i+=1
+					quantity -= expected
+				#print("b- ", i+1, " : ", j+1, " : ", expected, " : ", quantity)
+				
+		#print ("middle : ", self._solution)
+		# i make sure that the number of goods producted isn't inferior to the number expected
+
+		for i in range(Chromosome.problem.nbItems):
+
+			quantity = 0
+			rowSize = len(Chromosome.problem.deadlineDemandPeriods[i])
+			for j in range(rowSize):
+
+				expected = Chromosome.problem.deadlineDemandPeriods[i][j][1]
+				quantity += manufactGrid[i][j][1]
+
+				#print(i+1, " : ", j+1, " : ", expected, " : ", quantity)
+
+				if quantity < expected:
+
+					gap = expected - quantity
+					k = Chromosome.problem.deadlineDemandPeriods[i][j][0]
+					while k >= 0:
+
+						for l in range(Chromosome.problem.nbCapacities):
+
+							item = self._solution[k + l * Chromosome.problem.nbTimes][0]
+							if item == 0:
+								self._solution[k + l * Chromosome.problem.nbTimes][0] = i + 1
+								self._solution[k + l * Chromosome.problem.nbTimes][1] += gap
+								gap = 0
+								break
+
+						if gap == 0:
+							break
+
+						k -= 1
+
+				quantity -= expected
 
 		#print("at the end of getFeasible : ", self._solution)
 		self._get_fitnessValue()
-		self._get_itemsRanks()
 
 	def getCostof(cls, indice, item, rank,solution, secondIndice = -1):
 
@@ -527,7 +471,6 @@ class Chromosome(object):
 	# Properties
 	solution = property(_get_solution,_set_solution)
 	fitnessValue = property(_get_fitnessValue,_set_fitnessValue)
-	itemsRank = property(_get_itemsRanks, _set_itemsRanks)
 	hashSolution = property(_get_hashSolution, _set_hashSolution) 
 
 class Node(object):

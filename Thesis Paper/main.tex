@@ -7,12 +7,21 @@
 \usepackage{graphicx}
 \usepackage{palatino}
 \usepackage{sectsty}
+<<<<<<< Updated upstream
+=======
+\usepackage[french, ruled]{algorithm2e}
+>>>>>>> Stashed changes
 %\usepackage{fancyhdr}
 \usepackage[colorlinks=true,linkcolor=black]{hyperref}
 \usepackage{color}
 \usepackage[top=3cm, bottom=3cm, left=3cm, right=3cm]{geometry}
 \pagestyle{plain}
 \author{Tafsir GNA}
+
+
+\makeatletter
+\renewcommand{\@algocf@capt@plain}{above}% formerly {bottom}
+\makeatother
 
 %\allsectionsfont{\sf}
 %\sectionfont{\sffamily\color{black}\sectionrule{3ex}{3pt} %
@@ -188,6 +197,40 @@ entre les produits.
 \end{description}
 
 \subsection{Classes}
+<<<<<<< Updated upstream
+=======
+	\subsubsection{Problèmes à courtes périodes}
+	Ces problèmes (\emph{Small time bucket problems}) sont caractérisés par des périodes de l'ordre de quelques heures, et la séquence des lots lors de la production est prise en compte. Quatre types de problèmes sont étudiés dans la littérature. Pour une étude détaillée de tous ces problèmes, nous pourrons nous référer à Drexl and Kimms [35]. Ces différents types de problèmes sont donc:
+	\begin{description}
+		\item[\textsl{Discrete lot-sizing and scheduling problem :}]
+		Ce problème noté DLSP, est initialement formulé par Fleischmann [43]. La principale hypothèse de ce problème est qu'au plus un article peut être produit par
+période. Si un article est fabriqué sur une période, alors toute la capacité disponible sur cette période sera utilisée. Généralement, les coûts de lancement sont pris en compte seulement lorsqu'un nouveau lot commence et non à chaque période.
+		\item[\textsl{Continuous setup lot-sizing problem :}]
+		Ce problème noté CSLP est similaire au précédent problème. La différence réside dans le fait que lorsqu'un article est produit sur une période, on utilise la capacité nécessaire pour produire cet article et non la capacité entière comme pour le problème précèdent.
+		\item[\textsl{Proportional lot-sizing and scheduling problem : }] 
+		Dans ce problème, que l'on notera PSLP, la capacité restante pour une période donnée est réutilisée pour produire un second article. Ce problème a été étudié par Drexl et Haase [34] et Kimms et Drexl [78]. Il existe des extensions pour ce problème, par exemple, le cas à plusieurs niveaux et plusieurs machines. Dans [76], Kimms propose de calculer des bornes inférieures, et il résout ce problème à l'aide d'un algorithme génétique dans [77].
+		\item[\textsl{General lot-sizing and scheduling problem : }] 
+		Ce problème noté GLSP, est plus général que les problèmes précédents, puisque le nombre d'articles à produire par période n'est pas restrictif. Il est étudié par Fleischmann et Meyr [44]. Il existe des extensions de ce problème, par exemple en intégrant des temps de lancement de production dépendant de la séquence des lots à produire ([93]).
+	\end{description}
+	
+	\subsubsection{Problèmes à longues périodes}
+	Les problèmes à longues périodes (\emph{Big time bucket problems}) sont basés sur des
+horizons de l'ordre de quelques jours à quelques semaines et sont caractérisés par le fait que plus d'un produit peut être fabriqué par période. Nous proposons dans cette section, une étude restreinte de ces problèmes.
+	
+	\begin{itemize}
+		\item[-] les problèmes à un niveau et un produit;
+		\item[-] les problèmes à un niveau et un produit;
+		\item[-] les problèmes à un niveau et plusieurs produits;
+		\item[-] les problèmes à plusieurs niveaux.
+	\end{itemize}
+	
+	\begin{center}
+		\begin{figure}[!h]
+			\includegraphics[scale=.5]{img/classification_dimensionnement.png}
+			\caption{Exemple de classification des modèles de dimensionnement de lots}
+		\end{figure}
+	\end{center}
+>>>>>>> Stashed changes
 
 \section{Les algorithmes génétiques}
 		\section*{Conclusion}

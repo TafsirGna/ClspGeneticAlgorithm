@@ -69,7 +69,9 @@ class GeneticAlgorithm:
 
 		#Node.evaluate([[0, 0], [1, 1], [1, 1], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]])
 		#Node.evaluate([[0,0], [1,1], [2,2], [1,2], [3,1], [0,0], [0,0], [3,2], [2,2], [3,2]])
-		
+		#c = Chromosome([[0,0], [1,3], [0,0], [2,4], [0,0], [0,0], [0,0], [3,1], [0,0], [0,0]])
+		#print(c)
+
 		
 		while i >= 0:
 		
@@ -107,6 +109,7 @@ class GeneticAlgorithm:
 				break
 					
 			i -= 1
+		
 		
 		# want to make sure the parent process will wait for the child thread before exiting
 		for thread in self.listMainThreads:
